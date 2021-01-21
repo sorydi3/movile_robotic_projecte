@@ -31,74 +31,58 @@ def split(points, split_thres, inter_thres, min_points, first_pt, last_pt):
     last_pt : column position of the last point in the array
     '''
     assert first_pt >= 0
-    assert last_pt <= points.shape[1]
-    
-    # TODO: CODE HERE!!!
-    # Check minimum number of points
-    #if ... < min_points:
-        #return None
+    assert last_pt <= points.shape[1] - 1
+
+    # Check number of points
+    if last_pt - first_pt + 1 < min_points:
+        return None
 
     # Line defined as "a*x + b*y + c = 0"
-    # Calc (a, b, c) of the line (prelab question)
+    # Calc (y1-y2)x + (x2-x1)y + (x1y2 - x2y1) = 0
     x1 = points[0, first_pt]
     y1 = points[1, first_pt]
     x2 = points[0, last_pt]
     y2 = points[1, last_pt]
-    #
-    #
+    line = np.array([y1-y2, x2-x1, x1*y2-x2*y1])
+    line /= np.linalg.norm(line[:2]) # normalize by || a, b ||
 
-    # Distances of points to line (prelab question)
-    #
-    #
-    #
+    # Distances
+    pts = np.vstack(( points, np.ones((1, points.shape[1])) )).T
+    dists = np.dot(pts, line)
+    dists = np.abs(dists)
+    dmax = np.max(dists[first_pt:last_pt+1])
 
-    # Check split threshold
-    #if ... > split_thres:
-       
+    # Split
+    if dmax > split_thres:
+        
         # Check sublines
-        #
-        #prev = split(points, split_thres, inter_thres, min_points, ...)
-        #post = split(points, split_thres, inter_thres, min_points, ...)
-       
-        # Return results of sublines
-        #if prev is not None and post is not None:
-            #return np.vstack((prev, post))
-        #elif prev is not None:
-            #return prev
-        #elif post is not None:
-            #return post
-        #else:
-            #return None
+        idx = np.argmax(dists == dmax) 
+        prev = split(points, split_thres, inter_thres, min_points, first_pt, idx)
+        post = split(points, split_thres, inter_thres, min_points, idx, last_pt)
+        
+        # Return results
+        if prev is not None and post is not None:
+            return np.vstack((prev, post))
+        elif prev is not None:
+            return prev
+        elif post is not None:
+            return post
+        else:
+            return None
 
     # Do not need to split furthermore
-    #else:
+    else:
         # Optional check interpoint distance
-        #for i in range(first_pt, last_pt):
-            #
-            #
-            #
-            #
-            # Check interpoint distance threshold
-            #if ... > inter_thres:
-                #Split line
-                #prev = split(points, split_thres, inter_thres, min_points, ...)
-                #post = split(points, split_thres, inter_thres, min_points, ...)
-               
-                # Return results of sublines
-                #if prev is not None and post is not None:
-                    #return np.vstack((prev, post))
-                #elif prev is not None:
-                    #return prev
-                #elif post is not None:
-                    #return post
-                #else:
-                    #return None
+        for i in range(first_pt, last_pt):
+            x3 = points[0, i]
+            y3 = points[1, i]
+            x4 = points[0, i+1]
+            y4 = points[1, i+1]
+            if np.sqrt((x3-x4)**2 + (y3-y4)**2) > inter_thres:
+                return None
         
         # It is a good line
-        #return np.array([[x1, y1, x2, y2]])
-        
-    # Dummy answer --> delete it
-    return np.array([[x1, y1, x2, y2]])
+        return np.array([[x1, y1, x2, y2]])
 
 #===============================================================================
 def merge(lines, dist_thres, ang_thres):
@@ -109,27 +93,28 @@ def merge(lines, dist_thres, ang_thres):
     if lines is None:
         return np.array([])
         
-    # Check and merge similar consecutive lines
-    #i = 0
-    #while i in range(...):
+    # Check and merge similar lines
+    i = 0
+    while i < lines.shape[0] - 1:
         
         # Line angles
-        #ang1 = 
-        #ang2 = 
+        ang1 = np.arctan2(lines[i,3]  -lines[i,1],   lines[i,2]  -lines[i,0])
+        ang2 = np.arctan2(lines[i+1,3]-lines[i+1,1], lines[i+1,2]-lines[i+1,0])
         
-        # Below thresholds?
-        #angdiff = 
-        #disdiff = 
-        #if angdiff < ang_thres and disdiff < dist_thres:
+        # Below thresholds
+        ang = abs(angle_wrap(ang1-ang2))
+        dis = np.sqrt( (lines[i,2] - lines[i+1,0])**2 + \
+                       (lines[i,3] - lines[i+1,1])**2 )
+        if ang < ang_thres and dis < dist_thres:
             
             # Joined line
-            #lines[i,:] = 
+            lines[i,:]=[lines[i,0], lines[i,1], lines[i+1,2], lines[i+1,3]]
             
             # Delete unnecessary line
-            #lines = np.delete(lines, ...)
+            lines = np.delete(lines, i+1, axis=0)
             
         # Nothing to merge
-        #else:
-            #i += 1
+        else:
+            i += 1
             
     return lines

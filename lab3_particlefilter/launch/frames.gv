@@ -1,0 +1,15 @@
+digraph G {
+"world" -> "mean_particle"[label="Broadcaster: /particle_filter\nAverage rate: 9.671 Hz\nMost recent transform: 29.447 ( 0.193 sec old)\nBuffer length: 4.860 sec\n"];
+"world" -> "base_footprint"[label="Broadcaster: /particle_filter\nAverage rate: 20.408 Hz\nMost recent transform: 29.600 ( 0.040 sec old)\nBuffer length: 4.900 sec\n"];
+"base_link" -> "base_laser_link"[label="Broadcaster: /rosbag\nAverage rate: 10.208 Hz\nMost recent transform: 29.600 ( 0.040 sec old)\nBuffer length: 4.800 sec\n"];
+"base_footprint" -> "base_link"[label="Broadcaster: /rosbag\nAverage rate: 10.208 Hz\nMost recent transform: 29.600 ( 0.040 sec old)\nBuffer length: 4.800 sec\n"];
+"base_footprint" -> "camera_depth_frame"[label="Broadcaster: /camera_tf_broadcaster\nAverage rate: 9.244 Hz\nMost recent transform: 29.695 ( -0.055 sec old)\nBuffer length: 4.868 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 29.640"[ shape=plaintext ] ;
+ }->"world";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 29.640"[ shape=plaintext ] ;
+ }->"odom";
+}

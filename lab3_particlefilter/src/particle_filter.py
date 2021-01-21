@@ -4,6 +4,7 @@
 import numpy as np
 from probabilistic_lib.functions import angle_wrap, get_polar_line
 
+
 #===============================================================================
 class ParticleFilter(object):
     '''
@@ -34,7 +35,7 @@ class ParticleFilter(object):
         self.odom_ang_sigma = odom_ang_sigma
         self.meas_rng_noise = meas_rng_noise
         self.meas_ang_noise = meas_ang_noise
-        
+        self.vehicle_frame=False
         # Map
         map_xmin = np.min(self.map[:, 0])
         map_xmax = np.max(self.map[:, 0])
@@ -49,6 +50,8 @@ class ParticleFilter(object):
         #Flags for resampling                         
         self.moving=False
         self.n_eff=0 #Initialize Efficent number as 0
+
+        
     
     #===========================================================================
     def predict(self, odom):
@@ -60,11 +63,26 @@ class ParticleFilter(object):
         if odom[0]==0 and odom[1]==0 and odom[2]==0:
             self.moving=False
         else:
+            
             # TODO: code here!!
             # Add Gaussian noise to odometry measures
             # .... np.random.randn(...)
             #
-            
+            x = odom[0]
+            y=odom[1]
+            h=odom[2]
+
+            #transform particles from world frame to vehicle frame.
+            if(not vehicle_frame):
+                
+
+            for i in range(len(self.p_xy[0,:])):
+                soroll_x=np.random.normal()*self.odom_lin_sigma
+                soroll_y=np.random.normal()*self.odom_lin_sigma
+                soroll_h=np.random.normal()*self.odom_ang_sigma
+                self.p_xy[0,i]+=soroll_x+x
+                self.p_xy[1,i]+=soroll_y+y
+                self.p_ang+= angle_wrap(h+soroll_h)
             # Increment particle positions in correct frame
             #self.p_xy +=
             #
