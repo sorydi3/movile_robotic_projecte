@@ -69,20 +69,20 @@ class ParticleFilter(object):
             # .... np.random.randn(...)
             #
             x = odom[0]
-            y=odom[1]
+            y=odom[0]
             h=odom[2]
 
             #transform particles from world frame to vehicle frame.
-            if(not vehicle_frame):
+            
                 
 
             for i in range(len(self.p_xy[0,:])):
                 soroll_x=np.random.normal()*self.odom_lin_sigma
                 soroll_y=np.random.normal()*self.odom_lin_sigma
                 soroll_h=np.random.normal()*self.odom_ang_sigma
-                self.p_xy[0,i]+=soroll_x+x
-                self.p_xy[1,i]+=soroll_y+y
-                self.p_ang+= angle_wrap(h+soroll_h)
+                self.p_xy[0,i]+=x*np.cos(self.p_ang[i])+soroll_x
+                self.p_xy[1,i]+=y*np.sin(self.p_ang[i])+soroll_y
+                self.p_ang[i]+= angle_wrap(h+soroll_h)
             # Increment particle positions in correct frame
             #self.p_xy +=
             #
@@ -148,7 +148,7 @@ class ParticleFilter(object):
         '''
         # TODO: code here!!
         # Look for particles to replicate
-        #
+        # 
         #
         #
         #for i in range(self.num):
