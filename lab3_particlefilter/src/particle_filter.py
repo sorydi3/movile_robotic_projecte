@@ -3,6 +3,8 @@
 
 import numpy as np
 from probabilistic_lib.functions import angle_wrap, get_polar_line
+import math
+import random
 
 
 #===============================================================================
@@ -73,8 +75,6 @@ class ParticleFilter(object):
             h=odom[2]
 
             #transform particles from world frame to vehicle frame.
-            
-                
 
             for i in range(len(self.p_xy[0,:])):
                 soroll_x=np.random.normal()*self.odom_lin_sigma
@@ -108,21 +108,26 @@ class ParticleFilter(object):
         val_ang = 1.0 / (self.meas_ang_noise * np.sqrt(2 * np.pi))
         
         # Loop over particles
-        #for i in range(self.num):
+        for i in range(self.num):
             #
-            
             # Transform map lines to local frame and to [range theta]
             #
-            #for j in range(self.map.shape[0]):
-                # ... get_polar_line(...)
+            map_to_polar=np.zeros((self.map.shape[0],2))
+            for j in range(self.map.shape[0]):
+                map_to_polar[j,:]=get_polar_line(self.map[j],[self.p_xy[0,i],self.p_xy[1,i],self.p_ang[i]])
                 
             # Transform measured lines to [range theta] and weight them
             #
-            #for j in range(lines.shape[0]):
+            lines_to_polar=np.zeros((lines.shape[0],2))
+            weight_lines = np.zeros((self.map.shape[0],lines.shape[0]))
+            for j in range(lines.shape[0]):
                 #
-                # ... get_polar_line(...)
+                lines_to_polar[j,:]=  get_polar_line(lines[j],[0,0,0])
                 #
                 # Weight them
+                weight_lines_range = val_rng * np.exp(-np.power(lines_to_polar[j,0] - map_to_polar[:,0],2) / (2*np.power(self.meas_rng_noise,2))) 
+                weight_lines_angle = val_ang * np.exp(-np.power(lines_to_polar[j,1] - map_to_polar[:,1],2) / (2*np.power(self.meas_ang_noise,2))) 
+                weight_lines[:,j] = weight_lines_angle * weight_lines_range
                 #
                 #
                 #
@@ -135,11 +140,14 @@ class ParticleFilter(object):
             
             # Take best weighting (best associated lines)
             #
+            max_weight = np.amax(weight_lines,axis = 0)
+            for j in range(max_weight.shape[0]):
+                self.p_wei[i] = self.p_wei[i] * max_weight[j]
             
         # Normalize weights
         self.p_wei /= np.sum(self.p_wei)
         # TODO: Compute efficient number
-        self.n_eff=0.0
+        self.n_eff= 1/(np.sum(np.power(self.p_wei,2)))
         
     #===========================================================================
     def resample(self):
@@ -148,23 +156,19 @@ class ParticleFilter(object):
         '''
         # TODO: code here!!
         # Look for particles to replicate
-        # 
-        #
-        #
-        #for i in range(self.num):
-        #
-        #
-        #
-        #
-        #
-        
-        # Pick chosen particles
-        #
-        #
-        #
-        #self.p_xy =
-        #self.p_ang =
-        #self.p_wei =
+        r = random.uniform(0, 1./self.num)
+        c = self.p_wei[0]
+        i = 0
+        for m in range(self.num):
+            u = r + m * 1./self.num
+            while u > c :
+                i = i + 1
+                c += self.p_wei[i]
+
+            self.p_xy[:,m] = self.p_xy[:,i]
+            self.p_ang[m] = self.p_ang[i]
+
+        self.p_wei = 1.0 / self.num * np.ones(self.num)
     
     #===========================================================================
     def get_mean_particle(self):
